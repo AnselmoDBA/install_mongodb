@@ -1,0 +1,260 @@
+################################################################
+#                                                              #
+#         Playbook Ansible - Configuração MongoDB              #
+#         Criado por: Anselmo Borges                           #
+#         Data de criação: 03.01.2018                          #
+#         Ultima atualização: 03.01.2018                       #
+#                                                              #
+################################################################                                    
+
+- name: "Playbook de instalação MongoDB"
+  hosts: "{{ host_var }}"
+  vars:
+    home_var: /home/abmoraes
+    bin_var: /u00/instaladores/mongo
+
+  tasks: 
+    - name: "Atualizando todos os repositórios do YUM"
+      yum: 
+        name: "*"
+        state: latest
+      become: true
+      become_method: sudo
+      become_user: root
+
+    - name: "Instalando o Net-tools via YUM"
+      yum: 
+        name: net-tools, ntp, htop, dstat, numactl
+        state: latest
+      become: true
+      become_method: sudo
+      become_user: root
+ 
+    - name: "Criando o grupo Mongo"
+      group:
+        name: mongod
+        gid: 1102
+        state: present  
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Criando o user Mongo"
+      shell: useradd mongod -g 1102 -u 1102 -d /home/mongod -s /bin/bash -c "Usuario owner do Mongo" && echo "mongod" | passwd --stdin mongod
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Movimentando arquivo do Limits do Mongo"
+      copy:
+        src: ../conf/mongo.conf
+        dest: /etc/security/limits.d/mongod.conf
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Criando as partições - sdb"
+      shell: /bin/echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdb
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Criando o Volume group LVM"
+      lvg:
+        vg: db0
+        pvs: /dev/sdb1
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Criando o Logical Volume LVM"
+      lvol:
+       vg: db0
+       lv: u00
+       size: 30g
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Formatando a partição"
+      filesystem: 
+        fstype: xfs
+        dev: /dev/mapper/db0-u00
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Adicionando entrada do /u00 no FSTAB"
+      shell: echo "/dev/mapper/db0-u00     /u00                    xfs     defaults        1 2" >> /etc/fstab
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "criando o diretorio /u00"
+      file: 
+        path: /u00 
+        state: directory
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Montando as partições"
+      shell: mount -a
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Criando os sub-diretorios do MongoDB - data"
+      file: 
+        path: /u00/mongodb/data/db01 
+        state: directory
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Criando os sub-diretorios do MongoDB - logs"
+      file: 
+        path: /u00/mongodb/logs/log01 
+        state: directory
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+
+    - name: "Criando os diretorios binários"
+      file: 
+        path: /u00/binarios 
+        state: directory
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Movimentando binarios do Mongo"
+      copy: 
+        src: /u00/instaladores/mongodb/rpms/
+        dest: /u00/binarios/
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Movimentando Hash RSA"
+      copy:
+        src: /home/abmoraes/mongo/conf/hash.auth
+        dest: /u00/mongodb/
+        owner: mongod
+        group: mongod
+        mode: 0644   
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Instalando o RPM do Mongo Tools"
+      yum: 
+        name: /u00/binarios/mongodb-org-tools-3.6.1-1.el7.x86_64.rpm
+        state: present
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Instalando o RPM do Mongo Shell"
+      yum: 
+        name: /u00/binarios/mongodb-org-shell-3.6.1-1.el7.x86_64.rpm
+        state: present
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Instalando o RPM do Mongo Server"
+      yum: 
+        name: /u00/binarios/mongodb-org-server-3.6.1-1.el7.x86_64.rpm
+        state: present
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Instalando o RPM do MongoS"
+      yum: 
+        name: /u00/binarios/mongodb-org-mongos-3.6.1-1.el7.x86_64.rpm
+        state: present
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Instalando o RPM do MongoDB"
+      yum: 
+        name: /u00/binarios/mongodb-org-3.6.1-1.el7.x86_64.rpm
+        state: present
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Movimentando mongod.conf"
+      copy: 
+        src: /home/abmoraes/mongo/conf/mongod.conf
+        dest: /etc/mongod.conf
+        mode: 0644   
+        owner: mongo
+        group: mongo
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Desabilitando o Transparent Hugepages 1"
+      command: echo never > /sys/kernel/mm/transparent_hugepage/enabled
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Desabilitando o Transparent Hugepages 2"
+      command: echo never > /sys/kernel/mm/transparent_hugepage/defrag
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Ajustando privilegios diretorio data"
+      file: 
+        path: /u00/mongodb/data/db01
+        state: directory
+        mode: 0755   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Ajustando privilegios diretorio logs"
+      file: 
+        path: /u00/mongodb/logs/log01
+        state: directory
+        mode: 0755   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Iniciando o serviço do MongoDB"
+      service: 
+        name: mongod
+        state: started 
+      become: yes
+      become_method: sudo
+      become_user: root
