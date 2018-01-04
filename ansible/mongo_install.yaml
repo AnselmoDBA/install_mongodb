@@ -9,10 +9,7 @@
 
 - name: "Playbook de instalação MongoDB"
   hosts: "{{ host_var }}"
-  vars:
-    home_var: /home/abmoraes
-    bin_var: /u00/instaladores/mongo
-
+    
   tasks: 
     - name: "Atualizando todos os repositórios do YUM"
       yum: 
@@ -24,13 +21,13 @@
 
     - name: "Instalando o Net-tools via YUM"
       yum: 
-        name: net-tools, ntp, htop, dstat, numactl
+        name: net-tools, ntp, htop, dstat, numactl, lvm2
         state: latest
       become: true
       become_method: sudo
       become_user: root
  
-    - name: "Criando o grupo Mongo"
+    - name: "Criando o grupo Mongod"
       group:
         name: mongod
         gid: 1102
@@ -39,9 +36,13 @@
       become_method: sudo
       become_user: root
 
-    - name: "Criando o user Mongo"
-      shell: useradd mongod -g 1102 -u 1102 -d /home/mongod -s /bin/bash -c "Usuario owner do Mongo" && echo "mongod" | passwd --stdin mongod
-      become: yes      
+    - name: "Criando usuário MONGOD"
+      user: 
+        name: mongod
+        uid: 1102
+        group: mongod
+        comment: "Owner do MongoDB"
+      become: yes
       become_method: sudo
       become_user: root
 
@@ -132,7 +133,6 @@
       become_method: sudo
       become_user: root
 
-
     - name: "Criando os diretorios binários"
       file: 
         path: /u00/binarios 
@@ -157,7 +157,7 @@
 
     - name: "Movimentando Hash RSA"
       copy:
-        src: /home/abmoraes/mongo/conf/hash.auth
+        src: ../conf/hash.auth
         dest: /u00/mongodb/
         owner: mongod
         group: mongod
@@ -208,11 +208,28 @@
 
     - name: "Movimentando mongod.conf"
       copy: 
-        src: /home/abmoraes/mongo/conf/mongod.conf
+        src: ../conf/mongod.conf
         dest: /etc/mongod.conf
         mode: 0644   
-        owner: mongo
-        group: mongo
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Desabilitando SELINUX sem reboot"
+      shell: /usr/sbin/setenforce 0
+      become: yes      
+      become_method: sudo
+      become_user: root
+
+    - name: "Desabilitando o SELINUX"
+      copy: 
+        src: ../conf/selinux
+        dest: /etc/sysconfig/selinux
+        mode: 0644   
+        owner: mongod
+        group: mongod
       become: yes
       become_method: sudo
       become_user: root
@@ -231,22 +248,39 @@
 
     - name: "Ajustando privilegios diretorio data"
       file: 
-        path: /u00/mongodb/data/db01
+        path: /u00/mongodb
         state: directory
         mode: 0755   
         owner: mongod
         group: mongod
+        recurse: yes
       become: yes
       become_method: sudo
       become_user: root
 
-    - name: "Ajustando privilegios diretorio logs"
+    - name: "Ajustando privilegios diretorio log"
       file: 
-        path: /u00/mongodb/logs/log01
-        state: directory
-        mode: 0755   
+        path: /var/log/mongodb
+        mode: 0777   
         owner: mongod
         group: mongod
+        recurse: yes
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Parando o Firewalld"
+      service: 
+        name: firewalld
+        state: stopped 
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "Desabilitando o Firewalld"
+      service: 
+        name: firewalld
+        enabled: no
       become: yes
       become_method: sudo
       become_user: root
