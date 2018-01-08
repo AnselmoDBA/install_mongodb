@@ -5,7 +5,10 @@ OBS: Por enquanto o playbook faz uma instalação básica do MongoDB, sem o Repl
 
 Scripts criados por Anselmo Borges
 
-Ultima atualização: 03.01.2018
+Data da criação: 03.01.2018
+
+Ultima atualização: 07.01.2018
+* Adicionada a replicação e criação dos users por playbook.
 
 Arquivos contidos nesse Repositório:
 * No diretorio ansible: O playbook mongo_install.yaml
@@ -19,7 +22,13 @@ Se por um acaso parar em algum ponto, corrija o playbook e volte rodando do step
 
 ansible-playbook --extra-vars "host_var=nome-do-host" --start-at-task="Parando o Firewalld" mongo_install.yaml 
 
-Comandos para ativar a replicação via ReplicaSet:
+## Edição do mongod.conf e mongod-r.conf:
+Deve ser editado o mongod.conf e mongod-r.conf sempre que executado em um node diferente, (caso contrário o mongo não sobe).
+
+## Criação de usuário:
+Foi criada uma variavel de ambiente chamada IP, a mesma deve rodar somente no primeiro node, quando executado no segundo, deve ser comentado a task de criação de usuário ou usar um skip
+
+### Comandos para ativar a replicação via ReplicaSet:
 ## Habilitando a replicação:
 rs.initiate( {_id : "rs0",members: [{ _id : 0, host : "mongodb01:27017"}]});
 
@@ -29,6 +38,8 @@ rs.add("mongodb02:27017");
 ## Validando o Status do ReplicaSet:
 rs.status();
 
-Dividas:
+### Dividas:
+
 anselmoborges@gmail.com
+
 http://www.anselmodba.com
