@@ -1,0 +1,8 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+## Nodes do Cluster:
+10.158.0.2 mongodb01.c.geofusion-191021.internal mongodb01  # Added by Google
+10.158.0.3 mongodb02.c.geofusion-191021.internal mongodb02  # Added by Google
+
+169.254.169.254 metadata.google.internal  # Added by Google

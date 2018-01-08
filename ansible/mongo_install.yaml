@@ -3,14 +3,28 @@
 #         Playbook Ansible - Configuração MongoDB              #
 #         Criado por: Anselmo Borges                           #
 #         Data de criação: 03.01.2018                          #
-#         Ultima atualização: 03.01.2018                       #
+#         Ultima atualização: 07.01.2018                       #
 #                                                              #
 ################################################################                                    
 
 - name: "Playbook de instalação MongoDB"
   hosts: "{{ host_var }}"
-    
+#  var:
+#    ip: 10.158.0.2
+
   tasks: 
+    - name: Adicionando o Repositório do MongoDB
+      yum_repository:
+        name: mongodb-org-3.6
+        description: Repositório do MongoDB
+        baseurl: https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.6/x86_64/
+        gpgkey: https://www.mongodb.org/static/pgp/server-3.6.asc
+        gpgcheck: yes
+        enabled: yes
+      become: yes
+      become_method: sudo
+      become_user: root
+
     - name: "Atualizando todos os repositórios do YUM"
       yum: 
         name: "*"
@@ -19,11 +33,27 @@
       become_method: sudo
       become_user: root
 
-    - name: "Instalando o Net-tools via YUM"
-      yum: 
-        name: net-tools, ntp, htop, dstat, numactl, lvm2
-        state: latest
-      become: true
+    - name: Instala pre-reqs via YUM
+      yum: name={{ item }} 
+      state: latest
+      with_items:
+        - gcc
+        - python-devel
+        - python-setuptools
+        - python-pip
+        - net-tools
+        - ntp
+        - htop
+        - dstat
+        - numactl
+        - lvm2
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: Instala o pymongo
+      pip: name=pymongo state=latest
+      become: yes
       become_method: sudo
       become_user: root
  
@@ -126,32 +156,10 @@
       file: 
         path: /u00/mongodb/logs/log01 
         state: directory
-        mode: 0644   
+        mode: 0755   
         owner: mongod
         group: mongod
       become: yes      
-      become_method: sudo
-      become_user: root
-
-    - name: "Criando os diretorios binários"
-      file: 
-        path: /u00/binarios 
-        state: directory
-        mode: 0644   
-        owner: mongod
-        group: mongod
-      become: yes
-      become_method: sudo
-      become_user: root
-
-    - name: "Movimentando binarios do Mongo"
-      copy: 
-        src: /u00/instaladores/mongodb/rpms/
-        dest: /u00/binarios/
-        mode: 0644   
-        owner: mongod
-        group: mongod
-      become: yes
       become_method: sudo
       become_user: root
 
@@ -166,41 +174,20 @@
       become_method: sudo
       become_user: root
 
-    - name: "Instalando o RPM do Mongo Tools"
-      yum: 
-        name: /u00/binarios/mongodb-org-tools-3.6.1-1.el7.x86_64.rpm
-        state: present
+    - name: "Movimentando Hosts"
+      copy:
+        src: ../conf/hosts
+        dest: /etc/
+        owner: root
+        group: root
+        mode: 0644   
       become: yes
       become_method: sudo
       become_user: root
 
-    - name: "Instalando o RPM do Mongo Shell"
+    - name: "Instalando o Mongo via YUM"
       yum: 
-        name: /u00/binarios/mongodb-org-shell-3.6.1-1.el7.x86_64.rpm
-        state: present
-      become: yes
-      become_method: sudo
-      become_user: root
-
-    - name: "Instalando o RPM do Mongo Server"
-      yum: 
-        name: /u00/binarios/mongodb-org-server-3.6.1-1.el7.x86_64.rpm
-        state: present
-      become: yes
-      become_method: sudo
-      become_user: root
-
-    - name: "Instalando o RPM do MongoS"
-      yum: 
-        name: /u00/binarios/mongodb-org-mongos-3.6.1-1.el7.x86_64.rpm
-        state: present
-      become: yes
-      become_method: sudo
-      become_user: root
-
-    - name: "Instalando o RPM do MongoDB"
-      yum: 
-        name: /u00/binarios/mongodb-org-3.6.1-1.el7.x86_64.rpm
+        name: mongodb-org
         state: present
       become: yes
       become_method: sudo
@@ -285,10 +272,40 @@
       become_method: sudo
       become_user: root
 
-    - name: "Iniciando o serviço do MongoDB"
+    - name: "Restart o serviço do MongoDB"
       service: 
         name: mongod
-        state: started 
+        state: restarted 
+      become: yes
+      become_method: sudo
+      become_user: root
+
+ 
+### Comentar para os demais servidores
+#    - name: Criando o usuário
+#      mongodb_user:
+#         login_host: "{{ ip }}"
+#         database: admin
+#         name: mongo
+#         password: mudar123 ## Senha temporária
+#         roles: userAdminAnyDatabase,dbAdminAnyDatabase,readWriteAnyDatabase
+#         state: present
+
+    - name: "Habilita a replicação no mongod.conf"
+      copy: 
+        src: ../conf/mongod-r.conf
+        dest: /etc/mongod.conf
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "2o Restart do serviço do MongoDB"
+      service: 
+        name: mongod
+        state: restarted 
       become: yes
       become_method: sudo
       become_user: root

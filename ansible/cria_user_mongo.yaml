@@ -1,0 +1,37 @@
+################################################################
+#                                                              #
+#         Playbook Ansible - Criação de user MongoDB           #
+#         Criado por: Anselmo Borges                           #
+#         Data de criação: 07.01.2018                          #
+#         Ultima atualização: 07.01.2018                       #
+#                                                              #
+################################################################                                    
+
+- name: "Playbook de criação de user MongoDB"
+  hosts: "{{ host_var }}"
+
+  tasks:
+    - name: Instala os modulos do Phyton
+      yum: name={{ item }} state=latest
+      with_items:
+        - gcc
+        - python-devel
+        - python-setuptools
+        - python-pip
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: Instala o pymongo
+      pip: name=pymongo state=latest
+      become: yes
+      become_method: sudo
+      become_user: root
+    
+    - name: Criando o usuário
+      mongodb_user:
+         database: admin
+         name: mongo
+         password: mudar123
+         roles: userAdminAnyDatabase,dbAdminAnyDatabase,readWriteAnyDatabase
+         state: present
