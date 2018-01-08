@@ -17,6 +17,18 @@ ansible-playbook --extra-vars "host_var=nome-do-host" mongo_install.yaml
 
 Se por um acaso parar em algum ponto, corrija o playbook e volte rodando do step que deu erro, por exemplo:
 
-ansible-playbook --extra-vars "host_var=mongodb3" --start-at-task="Parando o Firewalld" mongo_install.yaml 
+ansible-playbook --extra-vars "host_var=nome-do-host" --start-at-task="Parando o Firewalld" mongo_install.yaml 
 
+Comandos para ativar a replicação via ReplicaSet:
+## Habilitando a replicação:
+rs.initiate( {_id : "rs0",members: [{ _id : 0, host : "mongodb01:27017"}]});
 
+## Adicionando o segundo node:
+rs.add("mongodb02:27017");
+
+## Validando o Status do ReplicaSet:
+rs.status();
+
+Dividas:
+anselmoborges@gmail.com
+http://www.anselmodba.com
