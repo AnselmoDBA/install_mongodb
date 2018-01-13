@@ -139,18 +139,13 @@
       become_method: sudo
       become_user: root
 
-    - name: "Criando os sub-diretorios do MongoDB "
-      file: 
-        path: "{{ item }}"
-        state: directory
-        mode: 0644   
-        owner: mongod
-        group: mongod
-        with_items:
-          - /u00/mongodb/data/db01
-          - /u00/mongodb/logs/log01
-          - /u00/mongodb/logs/arb01
-          - /u00/mongodb/data/arb01
+    - name: "Criando os sub-diretorios do MongoDB"
+      file: path="{{ item }}" state=directory mode=0644 owner=mongod group=mongod
+      with_items:
+        - /u00/mongodb/data/db01
+        - /u00/mongodb/logs/log01
+        - /u00/mongodb/logs/arb01
+        - /u00/mongodb/data/arb01
       become: yes      
       become_method: sudo
       become_user: root

@@ -139,58 +139,14 @@
       become_method: sudo
       become_user: root
 
-    - name: "Criando os sub-diretorios do MongoDB - data"
-      file: 
-        path: /u00/mongodb/data/db01 
-        state: directory
-        mode: 0644   
-        owner: mongod
-        group: mongod
+    - name: "Criando os sub-diretorios do MongoDB"
+      file: path="{{ item }}" state=directory mode=0644 owner=mongod group=mongod
+      with_items:
+        - /u00/mongodb/data/db01
+        - /u00/mongodb/logs/log01
+        - /u00/mongodb/logs/arb01
+        - /u00/mongodb/data/arb01
       become: yes      
-      become_method: sudo
-      become_user: root
-
-    - name: "Criando os sub-diretorios do MongoDB - logs"
-      file: 
-        path: /u00/mongodb/logs/log01 
-        state: directory
-        mode: 0755   
-        owner: mongod
-        group: mongod
-      become: yes      
-      become_method: sudo
-      become_user: root
-
-    - name: "Criando os sub-diretorios do MongoDB - logs/arb"
-      file: 
-        path: /u00/mongodb/logs/arb01
-        state: directory
-        mode: 0755   
-        owner: mongod
-        group: mongod
-      become: yes      
-      become_method: sudo
-      become_user: root
-
-    - name: "Criando os sub-diretorios do MongoDB - data/arb"
-      file: 
-        path: /u00/mongodb/data/arb01
-        state: directory
-        mode: 0755   
-        owner: mongod
-        group: mongod
-      become: yes      
-      become_method: sudo
-      become_user: root
-
-    - name: "Movimentando Hash RSA"
-      copy:
-        src: ../conf/hash.auth
-        dest: /u00/mongodb/
-        owner: mongod
-        group: mongod
-        mode: 0644   
-      become: yes
       become_method: sudo
       become_user: root
 
@@ -382,7 +338,7 @@
       become_method: sudo
       become_user: root
 
-    - name: "Habilita a autenticação no mongod.conf"
+    - name: "Edita conf habilitando autenticação no mongod.conf"
       copy: 
         src: ../conf/mongod-a.conf
         dest: /etc/mongod.conf
@@ -393,10 +349,8 @@
       become_method: sudo
       become_user: root
 
-    - name: "3o Restart do serviço do MongoDB"
-      service: 
-        name: mongod
-        state: restarted 
-      become: yes
+    - name: "Executando ativa_replicaSet.js (denovo rs)"
+      shell: mongo "{{ ip }}" /tmp/ativa_replicaSet.js
+      become: yes      
       become_method: sudo
       become_user: root
