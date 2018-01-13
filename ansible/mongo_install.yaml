@@ -357,6 +357,26 @@
       become_method: sudo
       become_user: root
 
+   - name: "Habilita a autenticação no mongod.conf"
+      copy: 
+        src: ../conf/mongod-a.conf
+        dest: /etc/mongod.conf
+        mode: 0644   
+        owner: mongod
+        group: mongod
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: "3o Restart do serviço do MongoDB"
+      service: 
+        name: mongod
+        state: restarted 
+      become: yes
+      become_method: sudo
+      become_user: root
+
+
 #    - name: "Iniciando o arbitro"
 #      service: 
 #        name: mongod-arb
@@ -365,16 +385,16 @@
 #      become_method: sudo
 #      become_user: root
 
-    - name: "Copiando ativa_ReplicaSet.js"
-      copy: 
-        src: ../conf/ativa_replicaSet.js
-        dest: /tmp/ativa_replicaSet.js
-        mode: 0777   
-        owner: mongod
-        group: mongod
-      become: yes
-      become_method: sudo
-      become_user: root
+#    - name: "Copiando ativa_ReplicaSet.js"
+#      copy: 
+#        src: ../conf/ativa_replicaSet.js
+#        dest: /tmp/ativa_replicaSet.js
+#        mode: 0777   
+#        owner: mongod
+#        group: mongod
+#      become: yes
+#      become_method: sudo
+#      become_user: root
 
  #   - name: "Executando ativa_replicaSet.js"
  #     shell: mongo "{{ ip }}" /tmp/ativa_replicaSet.js
