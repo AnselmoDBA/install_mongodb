@@ -274,7 +274,7 @@
          database: admin
          name: mongo
          password: mudar123 ## Senha temporária
-         roles: userAdminAnyDatabase,dbAdminAnyDatabase,readWriteAnyDatabase
+         roles: userAdminAnyDatabase,dbAdminAnyDatabase,readWriteAnyDatabase,clusterAdmin
          state: present
 
     - name: "Habilita a replicação no mongod.conf"

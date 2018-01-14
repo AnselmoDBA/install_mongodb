@@ -232,17 +232,6 @@
       become_method: sudo
       become_user: root
 
-    - name: "Ajustando privilegios diretorio log"
-      file: 
-        path: /var/log/mongodb
-        mode: 0777   
-        owner: mongod
-        group: mongod
-        recurse: yes
-      become: yes
-      become_method: sudo
-      become_user: root
-
     - name: "Parando o Firewalld"
       service: 
         name: firewalld

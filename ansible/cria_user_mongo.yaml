@@ -30,8 +30,9 @@
     
     - name: Criando o usuário
       mongodb_user:
+         login_host: 10.158.0.2
          database: admin
-         name: mongo
-         password: mudar123
-         roles: userAdminAnyDatabase,dbAdminAnyDatabase,readWriteAnyDatabase
+         name: anselmo
+         password: anselmo
+         roles: userAdminAnyDatabase,dbAdminAnyDatabase,readWriteAnyDatabase,clusterAdmin
          state: present
